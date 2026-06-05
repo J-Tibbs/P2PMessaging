@@ -17,6 +17,8 @@ except FileExistsError:
 
 username = input("What is your username: ")
 
+
+
 rendezvous = ('10.0.0.22', 12345)
 
 # Create written file
@@ -25,24 +27,35 @@ filepath = directory_name / filename
 
 filepath.touch(exist_ok=True)
 
-print('connecting to rendezvous server')
+def connect(username):
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('0.0.0.0', 50001))
-sock.sendto(username.encode(), rendezvous)
+    print('connecting to rendezvous server')
 
-while True:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('0.0.0.0', 50001))
+    sock.sendto(username.encode(), rendezvous)
+
+    while True:
+        data = sock.recv(1024).decode()
+
+        if data.strip() == 'ready':
+            print('checked in with the server, waiting')
+            break
+
     data = sock.recv(1024).decode()
+    ip, sport, dport, pUser = data.split('|')
+    sport = int(sport)
+    dport = int(dport)
+    
+    sock.close()
 
-    if data.strip() == 'ready':
-        print('checked in with the server, waiting')
-        break
+    return ip, sport, dport, pUser
 
-data = sock.recv(1024).decode()
-ip, sport, dport, pUser = data.split('|')
-sport = int(sport)
-dport = int(dport)
+def reconnect(username):
+    global ip, sport, dport, pUser
+    ip, sport, dport, pUser = connect(username)
 
+ip, sport, dport, pUser = connect(username)
 
 print('\ngot peer')
 print('     ip:     {}'.format(ip))
@@ -67,12 +80,17 @@ def listen():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(('0.0.0.0', sport))
 
+
+
     while True:
         data = sock.recv(1024)
 
         if data == b'__DISCONNECT__':
             print(f'\n{pUser} has disconnected.')
             writeDown(filepath, f'{pUser} has disconnected.', '>>>')
+            sock.close()
+            print("Reconnecting...")
+            reconnect(username)
             break
         else:
             print(f'\r{pUser}: {data.decode()}\n', end='')
