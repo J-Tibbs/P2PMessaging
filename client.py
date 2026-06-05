@@ -18,8 +18,8 @@ except FileExistsError:
 username = input("What is your username: ")
 
 
-
-rendezvous = ('10.0.0.22', 12345)
+#Change to current IP
+rendezvous = ('', 12345)
 
 # Create written file
 filename = f"messages.{datetime.datetime.now().strftime('%d-%m-%Y')}"
