@@ -18,7 +18,9 @@ except FileExistsError:
 username = input("What is your username: ")
 
 
-#Change to current IP
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#--- Change to current IP ---
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 rendezvous = ('', 12345)
 
 # Create written file
@@ -55,20 +57,28 @@ def reconnect(username):
     global ip, sport, dport, pUser
     ip, sport, dport, pUser = connect(username)
 
+    startTalking(ip, sport, dport)
+    
+    listener = threading.Thread(target = listen, daemon = True)
+    listener.start()
+
+def startTalking(ip, sport, dport):
+    print('\ngot peer')
+    print('     ip:     {}'.format(ip))
+    print('     source port:     {}'.format(sport))
+    print('     dest port:     {}'.format(dport))
+
+    print('punching hole')
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    sock.sendto(b'0', (ip, dport))
+    print('ready to echange messages\n')
+
 ip, sport, dport, pUser = connect(username)
+startTalking(ip, sport, dport)
 
-print('\ngot peer')
-print('     ip:     {}'.format(ip))
-print('     source port:     {}'.format(sport))
-print('     dest port:     {}'.format(dport))
 
-print('punching hole')
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-sock.sendto(b'0', (ip, dport))
-
-print('ready to echange messages\n')
 
 
 def writeDown(filepath, message, username):

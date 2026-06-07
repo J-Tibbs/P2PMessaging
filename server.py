@@ -8,6 +8,11 @@ port = 12345
 
 sock.bind(('0.0.0.0', port))
 
+acceptedIp = [
+    '',
+    ''
+]
+
 
 while True:
     clients = []
@@ -15,6 +20,12 @@ while True:
 
     while True:
         username, address = sock.recvfrom(128)
+        ip, _ = address
+
+        if ip not in acceptedIp:
+            print(f'Rejected {ip}')
+            continue
+
         username = username.decode()
         print('connection from: {}'.format(address))
         clients.append(address)
